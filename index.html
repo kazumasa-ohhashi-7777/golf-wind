@@ -433,8 +433,6 @@ function showResult(speed, gust, deg, temp){
   windSpeed = speed;
   windDeg   = deg;
 
-  document.getElementById('valSpeed').textContent=speed.toFixed(1);
-  document.getElementById('valGust').textContent=gust.toFixed(1);
   document.getElementById('valTemp').textContent=temp.toFixed(1);
   document.getElementById('valTime').textContent='取得: '+new Date().toLocaleTimeString('ja-JP');
 
