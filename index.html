@@ -214,14 +214,14 @@ footer { font-size: 10px; color: rgba(255,255,255,0.15); letter-spacing: 1px; }
         <!-- 回転するローズ -->
         <g id="compassRose">
           <g id="ticks"></g>
-          <text x="90" y="20"  text-anchor="middle" font-size="14" font-weight="bold" fill="#e05252" font-family="Teko,sans-serif">N</text>
-          <text x="90" y="170" text-anchor="middle" font-size="14" font-weight="bold" fill="#e8f0eb" font-family="Teko,sans-serif">S</text>
-          <text x="16" y="95"  text-anchor="middle" font-size="14" font-weight="bold" fill="#e8f0eb" font-family="Teko,sans-serif">W</text>
-          <text x="164" y="95" text-anchor="middle" font-size="14" font-weight="bold" fill="#e8f0eb" font-family="Teko,sans-serif">E</text>
-          <text x="138" y="38"  text-anchor="middle" font-size="10" fill="#d4a843" font-family="Teko,sans-serif">NE</text>
-          <text x="38"  y="38"  text-anchor="middle" font-size="10" fill="#d4a843" font-family="Teko,sans-serif">NW</text>
-          <text x="138" y="150" text-anchor="middle" font-size="10" fill="#d4a843" font-family="Teko,sans-serif">SE</text>
-          <text x="38"  y="150" text-anchor="middle" font-size="10" fill="#d4a843" font-family="Teko,sans-serif">SW</text>
+    　    <text x="90" y="20"  text-anchor="middle" font-size="11" font-weight="bold" fill="#e05252" font-family="Noto Sans JP,sans-serif">北</text>
+          <text x="90" y="172" text-anchor="middle" font-size="11" font-weight="bold" fill="#e8f0eb" font-family="Noto Sans JP,sans-serif">南</text>
+          <text x="14" y="95"  text-anchor="middle" font-size="11" font-weight="bold" fill="#e8f0eb" font-family="Noto Sans JP,sans-serif">西</text>
+          <text x="166" y="95" text-anchor="middle" font-size="11" font-weight="bold" fill="#e8f0eb" font-family="Noto Sans JP,sans-serif">東</text>
+          <text x="138" y="38"  text-anchor="middle" font-size="9" fill="#d4a843" font-family="Noto Sans JP,sans-serif">北東</text>
+          <text x="38"  y="38"  text-anchor="middle" font-size="9" fill="#d4a843" font-family="Noto Sans JP,sans-serif">北西</text>
+          <text x="138" y="152" text-anchor="middle" font-size="9" fill="#d4a843" font-family="Noto Sans JP,sans-serif">南東</text>
+          <text x="38"  y="152" text-anchor="middle" font-size="9" fill="#d4a843" font-family="Noto Sans JP,sans-serif">南西</text>
         </g>
 
         <!-- 内円（固定） -->
@@ -237,8 +237,9 @@ footer { font-size: 10px; color: rgba(255,255,255,0.15); letter-spacing: 1px; }
           <circle cx="90" cy="90" r="5" fill="#0a1a10" stroke="#7ec8e3" stroke-width="2"/>
         </g>
 
-        <!-- 上マーカー -->
-        <polygon points="90,4 85,14 95,14" fill="#7ec8e3" opacity="0.7"/>
+        <!-- ピンマーカー -->
+        <line x1="90" y1="4" x2="90" y2="18" stroke="#7ec8e3" stroke-width="2"/>
+        <polygon points="90,4 102,9 90,14" fill="#7ec8e3"/>
       </svg>
     </div>
 
