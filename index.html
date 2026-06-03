@@ -42,9 +42,25 @@ h1 {
   cursor: pointer;
   transition: background 0.2s, transform 0.1s;
 }
-#gpsBtn:hover  { background: #38b869; }
-#gpsBtn:active { transform: scale(0.97); }
+#gpsBtn:hover   { background: #38b869; }
+#gpsBtn:active  { transform: scale(0.97); }
 #gpsBtn:disabled { background: #1a4028; color: #5a7a64; cursor: default; }
+
+/* iPhone用センサー許可ボタン */
+#sensorBtn {
+  display: none;
+  width: 100%;
+  max-width: 340px;
+  padding: 12px;
+  font-family: 'Noto Sans JP', sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  background: #1a3a8a;
+  color: #fff;
+  border: 1px solid rgba(100,150,255,0.4);
+  border-radius: 10px;
+  cursor: pointer;
+}
 
 #status {
   font-size: 13px;
@@ -96,25 +112,13 @@ h1 {
   margin-left: 4px;
 }
 
-/* ── リアルコンパス ── */
+/* コンパス */
 .compass-section {
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 10px;
   padding: 8px 0;
-}
-
-.compass-outer {
-  width: 160px;
-  height: 160px;
-  position: relative;
-}
-
-#compassSvg {
-  width: 100%;
-  height: 100%;
-  filter: drop-shadow(0 0 12px rgba(212,168,67,0.3));
 }
 
 .compass-label {
@@ -124,9 +128,24 @@ h1 {
   text-align: center;
 }
 
+.compass-hint {
+  font-size: 10px;
+  color: rgba(124,200,227,0.6);
+  text-align: center;
+}
+
+.compass-outer {
+  width: 180px;
+  height: 180px;
+  position: relative;
+  filter: drop-shadow(0 0 14px rgba(212,168,67,0.25));
+}
+
+#compassSvg { width: 100%; height: 100%; }
+
 .compass-reading {
   display: flex;
-  gap: 20px;
+  gap: 16px;
   align-items: center;
 }
 
@@ -155,6 +174,18 @@ h1 {
 .cross { background: rgba(224,160,64,0.2); color: #e0a040; border: 1px solid rgba(224,160,64,0.4); }
 .calm  { background: rgba(124,200,227,0.2);color: #7ec8e3; border: 1px solid rgba(124,200,227,0.4); }
 
+/* センサー状態インジケーター */
+.sensor-dot {
+  display: inline-block;
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: #5a7a64;
+  margin-right: 5px;
+  vertical-align: middle;
+}
+.sensor-dot.active { background: #52c8a0; animation: pulse 1.5s infinite; }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
 footer {
   font-size: 10px;
   color: rgba(255,255,255,0.15);
@@ -167,6 +198,7 @@ footer {
 <h1>⛳ GOLF WIND</h1>
 
 <button id="gpsBtn" onclick="getWind()">📍 現在地の風を取得</button>
+<button id="sensorBtn" onclick="requestSensor()">🧭 コンパスを有効にする（iPhone）</button>
 
 <div id="status">ボタンを押すと現在地の風情報を表示します</div>
 
@@ -196,43 +228,50 @@ footer {
     <span><span class="row-value" id="valTemp">--</span><span class="row-unit">°C</span></span>
   </div>
 
-  <!-- リアルコンパス -->
+  <!-- コンパス -->
   <div class="compass-section">
     <div class="compass-label">風向き</div>
+    <div class="compass-hint">
+      <span class="sensor-dot" id="sensorDot"></span>
+      <span id="sensorStatus">ピン方向にスマホを向けてください</span>
+    </div>
     <div class="compass-outer">
-      <svg id="compassSvg" viewBox="0 0 160 160" xmlns="http://www.w3.org/2000/svg">
+      <svg id="compassSvg" viewBox="0 0 180 180" xmlns="http://www.w3.org/2000/svg">
 
-        <!-- 外枠リング -->
-        <circle cx="80" cy="80" r="78" fill="#0a1a10" stroke="#d4a843" stroke-width="2"/>
-        <circle cx="80" cy="80" r="72" fill="none" stroke="rgba(212,168,67,0.3)" stroke-width="1"/>
+        <!-- 外枠 -->
+        <circle cx="90" cy="90" r="88" fill="#0a1a10" stroke="#d4a843" stroke-width="2"/>
+        <circle cx="90" cy="90" r="82" fill="none" stroke="rgba(212,168,67,0.2)" stroke-width="1"/>
 
-        <!-- 目盛り（5度ごと） -->
-        <g id="ticks"></g>
-
-        <!-- 方位文字（固定） -->
-        <text x="80" y="18"  text-anchor="middle" font-size="13" font-weight="bold" fill="#e05252" font-family="Teko,sans-serif">N</text>
-        <text x="80" y="150" text-anchor="middle" font-size="13" font-weight="bold" fill="#e8f0eb" font-family="Teko,sans-serif">S</text>
-        <text x="16" y="85"  text-anchor="middle" font-size="13" font-weight="bold" fill="#e8f0eb" font-family="Teko,sans-serif">W</text>
-        <text x="144" y="85" text-anchor="middle" font-size="13" font-weight="bold" fill="#e8f0eb" font-family="Teko,sans-serif">E</text>
-
-        <!-- NE SW NW SE -->
-        <text x="122" y="34"  text-anchor="middle" font-size="9" fill="#d4a843" font-family="Teko,sans-serif">NE</text>
-        <text x="34"  y="34"  text-anchor="middle" font-size="9" fill="#d4a843" font-family="Teko,sans-serif">NW</text>
-        <text x="122" y="133" text-anchor="middle" font-size="9" fill="#d4a843" font-family="Teko,sans-serif">SE</text>
-        <text x="34"  y="133" text-anchor="middle" font-size="9" fill="#d4a843" font-family="Teko,sans-serif">SW</text>
-
-        <!-- 内側リング -->
-        <circle cx="80" cy="80" r="48" fill="rgba(0,0,0,0.4)" stroke="rgba(212,168,67,0.2)" stroke-width="1"/>
-
-        <!-- 風向き矢印グループ（回転する） -->
-        <g id="windArrow">
-          <!-- 風上側（赤） -->
-          <polygon points="80,36 74,72 86,72" fill="#e05252"/>
-          <!-- 風下側（白） -->
-          <polygon points="80,124 74,88 86,88" fill="#c8d8cc"/>
-          <!-- 中心円 -->
-          <circle cx="80" cy="80" r="6" fill="#0a1a10" stroke="#d4a843" stroke-width="2"/>
+        <!-- 回転するコンパスローズ（方位文字＋目盛り） -->
+        <g id="compassRose">
+          <!-- 目盛りはJSで描画 -->
+          <g id="ticks"></g>
+          <!-- 方位文字 -->
+          <text x="90" y="20"  text-anchor="middle" font-size="14" font-weight="bold" fill="#e05252" font-family="Teko,sans-serif">N</text>
+          <text x="90" y="170" text-anchor="middle" font-size="14" font-weight="bold" fill="#e8f0eb" font-family="Teko,sans-serif">S</text>
+          <text x="16" y="95"  text-anchor="middle" font-size="14" font-weight="bold" fill="#e8f0eb" font-family="Teko,sans-serif">W</text>
+          <text x="164" y="95" text-anchor="middle" font-size="14" font-weight="bold" fill="#e8f0eb" font-family="Teko,sans-serif">E</text>
+          <text x="138" y="38"  text-anchor="middle" font-size="10" fill="#d4a843" font-family="Teko,sans-serif">NE</text>
+          <text x="38"  y="38"  text-anchor="middle" font-size="10" fill="#d4a843" font-family="Teko,sans-serif">NW</text>
+          <text x="138" y="150" text-anchor="middle" font-size="10" fill="#d4a843" font-family="Teko,sans-serif">SE</text>
+          <text x="38"  y="150" text-anchor="middle" font-size="10" fill="#d4a843" font-family="Teko,sans-serif">SW</text>
         </g>
+
+        <!-- 内側リング（固定） -->
+        <circle cx="90" cy="90" r="52" fill="rgba(0,0,0,0.5)" stroke="rgba(212,168,67,0.2)" stroke-width="1"/>
+
+        <!-- 風向き矢印（固定・絶対方向） -->
+        <g id="windArrow">
+          <!-- 上向き＝風が吹いてくる方向 赤 -->
+          <polygon points="90,44 83,78 97,78" fill="#e05252"/>
+          <!-- 下向き 白 -->
+          <polygon points="90,136 83,102 97,102" fill="#c8d8cc"/>
+          <!-- 中心 -->
+          <circle cx="90" cy="90" r="7" fill="#0a1a10" stroke="#d4a843" stroke-width="2"/>
+        </g>
+
+        <!-- 上方向マーカー（固定の三角） -->
+        <polygon points="90,4 85,14 95,14" fill="#7ec8e3" opacity="0.8"/>
 
       </svg>
     </div>
@@ -251,29 +290,104 @@ footer {
 <footer>GPS → Open-Meteo / Nominatim → 風情報表示</footer>
 
 <script>
-// 目盛りを描画
+let windDeg    = 0;   // 風向き（気象：吹いてくる方向）
+let headingDeg = 0;   // スマホが向いている方向
+
+// ===== 目盛り描画 =====
 (function() {
   const g = document.getElementById('ticks');
   for (let i = 0; i < 72; i++) {
     const deg = i * 5;
     const rad = deg * Math.PI / 180;
+    const r1  = 82;
     const isMajor = deg % 90 === 0;
     const isMid   = deg % 45 === 0;
-    const r1 = 72;
-    const r2 = isMajor ? 60 : isMid ? 63 : 66;
-    const x1 = 80 + r1 * Math.sin(rad);
-    const y1 = 80 - r1 * Math.cos(rad);
-    const x2 = 80 + r2 * Math.sin(rad);
-    const y2 = 80 - r2 * Math.cos(rad);
-    const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+    const r2  = isMajor ? 68 : isMid ? 71 : 74;
+    const x1 = 90 + r1 * Math.sin(rad);
+    const y1 = 90 - r1 * Math.cos(rad);
+    const x2 = 90 + r2 * Math.sin(rad);
+    const y2 = 90 - r2 * Math.cos(rad);
+    const line = document.createElementNS('http://www.w3.org/2000/svg','line');
     line.setAttribute('x1', x1); line.setAttribute('y1', y1);
     line.setAttribute('x2', x2); line.setAttribute('y2', y2);
-    line.setAttribute('stroke', isMajor ? '#d4a843' : isMid ? 'rgba(212,168,67,0.6)' : 'rgba(212,168,67,0.25)');
+    line.setAttribute('stroke', isMajor ? '#d4a843' : isMid ? 'rgba(212,168,67,0.5)' : 'rgba(212,168,67,0.2)');
     line.setAttribute('stroke-width', isMajor ? '2' : '1');
     g.appendChild(line);
   }
 })();
 
+// ===== コンパス更新 =====
+function updateCompass() {
+  // コンパスローズ：自分の向きと逆に回転 → 自分が向いた方向が上に来る
+  document.getElementById('compassRose').setAttribute(
+    'transform', 'rotate(' + (-headingDeg) + ', 90, 90)'
+  );
+  // 風矢印：絶対方向で表示（heading補正なし）
+  // windDegは「吹いてくる方向」なのでそのまま
+  document.getElementById('windArrow').setAttribute(
+    'transform', 'rotate(' + (windDeg - headingDeg) + ', 90, 90)'
+  );
+}
+
+// ===== 方位センサー =====
+function startSensor() {
+  // Android / 一部ブラウザ
+  if (window.DeviceOrientationEvent) {
+    window.addEventListener('deviceorientationabsolute', onOrientation, true);
+    window.addEventListener('deviceorientation', onOrientation, true);
+  }
+}
+
+function onOrientation(e) {
+  let heading = null;
+  if (e.absolute && e.alpha !== null) {
+    heading = 360 - e.alpha; // absolute の場合
+  } else if (e.webkitCompassHeading !== undefined) {
+    heading = e.webkitCompassHeading; // iPhone Safari
+  } else if (e.alpha !== null) {
+    heading = 360 - e.alpha;
+  }
+  if (heading === null) return;
+
+  headingDeg = heading;
+  updateCompass();
+
+  const dot = document.getElementById('sensorDot');
+  const txt = document.getElementById('sensorStatus');
+  if (!dot.classList.contains('active')) {
+    dot.classList.add('active');
+    txt.textContent = 'コンパス動作中 — ピン方向へ向けてください';
+  }
+}
+
+// iPhone用：許可リクエスト
+function requestSensor() {
+  if (typeof DeviceOrientationEvent.requestPermission === 'function') {
+    DeviceOrientationEvent.requestPermission()
+      .then(state => {
+        if (state === 'granted') {
+          startSensor();
+          document.getElementById('sensorBtn').style.display = 'none';
+        } else {
+          alert('コンパスの許可が必要です');
+        }
+      })
+      .catch(console.error);
+  }
+}
+
+// iPhoneかどうか判定してボタン表示
+function initSensor() {
+  if (typeof DeviceOrientationEvent.requestPermission === 'function') {
+    // iPhone Safari → ボタンで許可
+    document.getElementById('sensorBtn').style.display = 'block';
+  } else {
+    // Android / その他 → 自動開始
+    startSensor();
+  }
+}
+
+// ===== GPS & 風取得 =====
 async function getWind() {
   const btn    = document.getElementById('gpsBtn');
   const status = document.getElementById('status');
@@ -343,19 +457,15 @@ function showResult(speed, gust, deg, temp) {
   document.getElementById('valTemp').textContent  = temp.toFixed(1);
   document.getElementById('valTime').textContent  = '取得: ' + new Date().toLocaleTimeString('ja-JP');
 
-  // 風向き文字
+  windDeg = deg;
+
   const dirs = ['北','北北東','北東','東北東','東','東南東','南東','南南東',
                 '南','南南西','南西','西南西','西','西北西','北西','北北西'];
-  const name = dirs[Math.round(deg / 22.5) % 16];
-  document.getElementById('valDirName').textContent = name;
+  document.getElementById('valDirName').textContent = dirs[Math.round(deg / 22.5) % 16];
   document.getElementById('valDirDeg').textContent  = Math.round(deg) + '°';
 
-  // コンパス矢印：風が吹いてくる方向に赤い先端を向ける
-  // degは「風が吹いてくる方向」なのでそのまま回転でOK
-  document.getElementById('windArrow').setAttribute('transform',
-    'rotate(' + deg + ', 80, 80)');
+  updateCompass();
 
-  // バッジ
   const badge = document.getElementById('windBadge');
   if (speed < 1) {
     badge.textContent = 'ほぼ無風';       badge.className = 'calm';
@@ -370,6 +480,7 @@ function showResult(speed, gust, deg, temp) {
   }
 
   document.getElementById('result').classList.add('show');
+  initSensor();
 }
 </script>
 </body>
