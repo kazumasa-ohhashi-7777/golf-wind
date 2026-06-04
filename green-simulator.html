@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>⛳ Green Simulator</title>
+<link href="https://fonts.googleapis.com/css2?family=Teko:wght@300;400;600&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --ink:    #080f09;
+  --green:  #2a6e3f;
+  --green2: #1e5230;
+  --gold:   #c8a040;
+  --sky:    #6ab8d4;
+  --danger: #d84040;
+  --safe:   #48b888;
+  --white:  #e8f0eb;
+  --muted:  #607870;
+  --panel:  rgba(6,14,8,0.95);
+  --border: rgba(200,160,64,0.2);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+html, body { width: 100%; height: 100%; overflow: hidden; background: var(--ink); }
+
+body {
+  font-family: 'Noto Sans JP', sans-serif;
+  color: var(--white);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+header {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--border);
+  background: var(--panel);
+  z-index: 10;
+  flex-shrink: 0;
+}
+.logo { font-family:'Teko',sans-serif; font-size:22px; letter-spacing:3px; color:var(--gold); }
+.hole-info { font-size:11px; color:var(--muted); text-align:right; line-height:1.5; }
+
+#canvas {
+  display: block;
+  touch-action: none;
+  flex-shrink: 0;
+}
+
+.slope-bar {
+  width: 100%;
+  display: flex;
+  gap: 6px;
+  padding: 8px 12px;
+  background: var(--panel);
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.slope-bar::-webkit-scrollbar { display: none; }
+
+.slope-btn {
+  flex-shrink: 0;
+  padding: 5px 12px;
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  background: none;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.15s;
+}
+.slope-btn.active {
+  border-color: var(--gold);
+  color: var(--gold);
+  background: rgba(200,160,64,0.1);
+}
+
+.bottom {
+  width: 100%;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 10px 14px 14px;
+  background: var(--panel);
+  border-top: 1px solid var(--border);
+  gap: 8px;
+  overflow: hidden;
+}
+
+.status-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.status-text {
+  font-size: 13px;
+  color: var(--muted);
+  line-height: 1.4;
+}
+
+.status-badge {
+  font-family: 'Teko', sans-serif;
+  font-size: 16px;
+  padding: 3px 12px;
+  border-radius: 20px;
+  letter-spacing: 1px;
+}
+.badge-ready  { background: rgba(72,184,136,0.15); color: var(--safe);   border: 1px solid rgba(72,184,136,0.3); }
+.badge-swing  { background: rgba(106,184,212,0.15); color: var(--sky);   border: 1px solid rgba(106,184,212,0.3); }
+.badge-roll   { background: rgba(200,160,64,0.15);  color: var(--gold);  border: 1px solid rgba(200,160,64,0.3); }
+.badge-in     { background: rgba(72,184,136,0.25);  color: var(--safe);  border: 1px solid rgba(72,184,136,0.5); }
+.badge-out    { background: rgba(216,64,64,0.15);   color: var(--danger);border: 1px solid rgba(216,64,64,0.3); }
+
+.btn-row { display: flex; gap: 8px; }
+
+.btn {
+  flex: 1;
+  padding: 11px;
+  border: none;
+  border-radius: 10px;
+  font-family: 'Noto Sans JP', sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.btn-primary { background: var(--green); color: #fff; }
+.btn-primary:hover { background: #38b869; }
+.btn-secondary { background: rgba(255,255,255,0.06); color: var(--muted); border: 1px solid var(--border); }
+
+.accel-bar-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.accel-label { font-size: 10px; color: var(--muted); min-width: 48px; }
+.accel-track {
+  flex: 1;
+  height: 4px;
+  background: rgba(255,255,255,0.07);
+  border-radius: 2px;
+  overflow: hidden;
+}
+.accel-fill {
+  height: 100%;
+  background: var(--sky);
+  border-radius: 2px;
+  width: 0%;
+  transition: width 0.05s;
+}
+.accel-val { font-family:'Teko',sans-serif; font-size:14px; color:var(--sky); min-width:36px; text-align:right; }
+
+#motionBtn {
+  display: none;
+  width: 100%;
+  padding: 10px;
+  background: #1a3a8a;
+  color: #fff;
+  border: 1px solid rgba(100,150,255,0.4);
+  border-radius: 10px;
+  font-family: 'Noto Sans JP', sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+#cupIn {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.7);
+  z-index: 100;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 16px;
+}
+#cupIn.show { display: flex; }
+.cupin-emoji { font-size: 72px; animation: bounce 0.5s ease infinite alternate; }
+@keyframes bounce { from{transform:scale(1)} to{transform:scale(1.2)} }
+.cupin-text { font-family:'Teko',sans-serif; font-size:36px; letter-spacing:4px; color:var(--gold); }
+.cupin-sub  { font-size:14px; color:var(--muted); }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">⛳ GREEN SIM</div>
+  <div class="hole-info" id="holeInfo">傾斜を選んでボールを置いてください</div>
+</header>
+
+<div class="slope-bar" id="slopeBar"></div>
+
+<canvas id="canvas"></canvas>
+
+<div class="bottom">
+  <div class="status-row">
+    <div class="status-text" id="statusText">①傾斜を選ぶ　②グリーンをタップしてボール配置　③パッティング動作</div>
+    <div class="status-badge badge-ready" id="statusBadge">READY</div>
+  </div>
+
+  <div class="accel-bar-wrap">
+    <span class="accel-label">スイング力</span>
+    <div class="accel-track"><div class="accel-fill" id="accelFill"></div></div>
+    <span class="accel-val" id="accelVal">0.0</span>
+  </div>
+
+  <button id="motionBtn" onclick="requestMotion()">📱 スイング検知を有効にする（iPhone）</button>
+
+  <div class="btn-row">
+    <button class="btn btn-secondary" onclick="resetBall()">🔄 リセット</button>
+    <button class="btn btn-primary"   onclick="manualPutt()">👆 タップでパット</button>
+  </div>
+</div>
+
+<div id="cupIn">
+  <div class="cupin-emoji">⛳</div>
+  <div class="cupin-text">HOLE IN !</div>
+  <div class="cupin-sub">タップして続ける</div>
+</div>
+
+<script>
+const SLOPES = [
+  { label:'フラット',       sx:0,     sy:0     },
+  { label:'奥から手前↓',   sx:0,     sy:0.018 },
+  { label:'手前から奥↑',   sx:0,     sy:-0.018},
+  { label:'左から右→',     sx:-0.015,sy:0     },
+  { label:'右から左←',     sx:0.015, sy:0     },
+  { label:'左奥↘',         sx:-0.012,sy:0.012 },
+  { label:'右奥↙',         sx:0.012, sy:0.012 },
+  { label:'複合（難）',     sx:-0.01, sy:0.015 },
+];
+
+const canvas = document.getElementById('canvas');
+const ctx    = canvas.getContext('2d');
+
+let W, H, GW, GH, GX, GY;
+let slopeX = 0, slopeY = 0.018;
+let slopeIdx = 1;
+
+let ball = null;
+let cup  = null;
+let rolling = false;
+let phase = 'place';
+
+let accel = 0;
+let motionActive = false;
+let swingBuffer = [];
+let lastAX = 0, lastAY = 0, lastAZ = 0;
+
+function resize(){
+  const dpr = window.devicePixelRatio || 1;
+  const totalH = window.innerHeight;
+  const headerH  = document.querySelector('header').offsetHeight;
+  const slopeH   = document.querySelector('.slope-bar').offsetHeight;
+  const bottomH  = document.querySelector('.bottom').offsetHeight;
+  const canvasH  = totalH - headerH - slopeH - bottomH;
+  const canvasW  = window.innerWidth;
+
+  canvas.style.width  = canvasW + 'px';
+  canvas.style.height = canvasH + 'px';
+  canvas.width  = canvasW * dpr;
+  canvas.height = canvasH * dpr;
+  ctx.scale(dpr, dpr);
+  W = canvasW;
+  H = canvasH;
+
+  const pad = Math.min(W, H) * 0.08;
+  GX = pad; GY = pad;
+  GW = W - pad*2;
+  GH = H - pad*2;
+
+  cup = { x: GX + GW * 0.5, y: GY + GH * 0.25 };
+
+  draw();
+}
+
+window.addEventListener('resize', resize);
+
+(function(){
+  const bar = document.getElementById('slopeBar');
+  SLOPES.forEach((s, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'slope-btn' + (i === slopeIdx ? ' active' : '');
+    btn.textContent = s.label;
+    btn.onclick = () => {
+      document.querySelectorAll('.slope-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      slopeIdx = i;
+      slopeX = SLOPES[i].sx;
+      slopeY = SLOPES[i].sy;
+      resetBall();
+      updateHoleInfo();
+    };
+    bar.appendChild(btn);
+  });
+})();
+
+function updateHoleInfo(){
+  document.getElementById('holeInfo').textContent = '傾斜: ' + SLOPES[slopeIdx].label;
+}
+
+function draw(){
+  ctx.clearRect(0, 0, W, H);
+  ctx.fillStyle = '#0a140c';
+  ctx.fillRect(0, 0, W, H);
+  drawGreen();
+  drawSlopeArrows();
+  drawCup();
+  if(ball) drawBall();
+  requestAnimationFrame(draw);
+}
+
+function drawGreen(){
+  const cx = GX + GW/2, cy = GY + GH/2;
+  const rx = GW/2, ry = GH/2;
+  ctx.save();
+  ctx.shadowColor = 'rgba(0,0,0,0.5)';
+  ctx.shadowBlur  = 20;
+  ctx.shadowOffsetY = 8;
+  const grad = ctx.createRadialGradient(cx, cy-ry*0.2, 0, cx, cy, Math.max(rx,ry));
+  grad.addColorStop(0,   '#3a9055');
+  grad.addColorStop(0.6, '#2d7a44');
+  grad.addColorStop(1,   '#1e5230');
+  ctx.fillStyle = grad;
+  ctx.beginPath();
+  ctx.ellipse(cx, cy, rx, ry, 0, 0, Math.PI*2);
+  ctx.fill();
+  ctx.restore();
+  ctx.strokeStyle = 'rgba(255,255,255,0.12)';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.ellipse(cx, cy, rx, ry, 0, 0, Math.PI*2);
+  ctx.stroke();
+  ctx.save();
+  ctx.clip();
+  ctx.beginPath();
+  ctx.ellipse(cx, cy, rx, ry, 0, 0, Math.PI*2);
+  for(let x = GX; x < GX+GW; x += 14){
+    ctx.strokeStyle = 'rgba(255,255,255,0.03)';
+    ctx.lineWidth = 7;
+    ctx.beginPath();
+    ctx.moveTo(x, GY);
+    ctx.lineTo(x, GY+GH);
+    ctx.stroke();
+  }
+  ctx.restore();
+}
+
+function drawSlopeArrows(){
+  if(slopeX === 0 && slopeY === 0) return;
+  const cx = GX+GW/2, cy = GY+GH/2;
+  const mag = Math.sqrt(slopeX*slopeX + slopeY*slopeY);
+  const nx = slopeX/mag, ny = slopeY/mag;
+  const step = 60;
+  const cols = Math.floor(GW/step);
+  const rows = Math.floor(GH/step);
+  for(let c=0; c<=cols; c++){
+    for(let r=0; r<=rows; r++){
+      const ax = GX + c*step + step/2;
+      const ay = GY + r*step + step/2;
+      const dx = (ax-cx)/(GW/2), dy = (ay-cy)/(GH/2);
+      if(dx*dx+dy*dy > 0.85) continue;
+      const len = 18;
+      const ex = ax + nx*len, ey = ay + ny*len;
+      ctx.save();
+      ctx.globalAlpha = 0.25;
+      ctx.strokeStyle = '#fff';
+      ctx.lineWidth = 1.2;
+      ctx.beginPath();
+      ctx.moveTo(ax, ay);
+      ctx.lineTo(ex, ey);
+      ctx.stroke();
+      const angle = Math.atan2(ey-ay, ex-ax);
+      ctx.beginPath();
+      ctx.moveTo(ex, ey);
+      ctx.lineTo(ex - 6*Math.cos(angle-0.4), ey - 6*Math.sin(angle-0.4));
+      ctx.lineTo(ex - 6*Math.cos(angle+0.4), ey - 6*Math.sin(angle+0.4));
+      ctx.closePath();
+      ctx.fillStyle = '#fff';
+      ctx.fill();
+      ctx.restore();
+    }
+  }
+}
+
+function drawCup(){
+  if(!cup) return;
+  ctx.save();
+  ctx.beginPath();
+  ctx.arc(cup.x, cup.y, 10, 0, Math.PI*2);
+  ctx.fillStyle = '#0a0e0b';
+  ctx.fill();
+  ctx.strokeStyle = 'rgba(255,255,255,0.3)';
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+  ctx.restore();
+  ctx.save();
+  ctx.strokeStyle = '#e8f0eb';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(cup.x, cup.y);
+  ctx.lineTo(cup.x, cup.y - 28);
+  ctx.stroke();
+  ctx.fillStyle = '#d84040';
+  ctx.beginPath();
+  ctx.moveTo(cup.x, cup.y-28);
+  ctx.lineTo(cup.x+14, cup.y-22);
+  ctx.lineTo(cup.x, cup.y-16);
+  ctx.closePath();
+  ctx.fill();
+  ctx.restore();
+}
+
+function drawBall(){
+  if(!ball) return;
+  const r = 9;
+  ctx.save();
+  ctx.globalAlpha = 0.3;
+  ctx.beginPath();
+  ctx.ellipse(ball.x+3, ball.y+4, r*0.9, r*0.5, 0, 0, Math.PI*2);
+  ctx.fillStyle = '#000';
+  ctx.fill();
+  ctx.restore();
+  const grad = ctx.createRadialGradient(ball.x-3, ball.y-3, 1, ball.x, ball.y, r);
+  grad.addColorStop(0, '#ffffff');
+  grad.addColorStop(1, '#c8d8cc');
+  ctx.beginPath();
+  ctx.arc(ball.x, ball.y, r, 0, Math.PI*2);
+  ctx.fillStyle = grad;
+  ctx.fill();
+  ctx.strokeStyle = 'rgba(0,0,0,0.15)';
+  ctx.lineWidth = 1;
+  ctx.stroke();
+}
+
+canvas.addEventListener('pointerdown', e => {
+  if(rolling) return;
+  const rect = canvas.getBoundingClientRect();
+  const x = e.clientX - rect.left;
+  const y = e.clientY - rect.top;
+  const cx = GX+GW/2, cy = GY+GH/2;
+  const dx = (x-cx)/(GW/2), dy = (y-cy)/(GH/2);
+  if(dx*dx+dy*dy > 0.9) return;
+  ball = { x, y, vx:0, vy:0 };
+  phase = 'ready';
+  setStatus('ready', 'パッティング動作でスイング！または「タップでパット」');
+});
+
+let lastTime = 0;
+function rollStep(ts){
+  if(!rolling || !ball) return;
+  const dt = Math.min((ts - lastTime) / 1000, 0.05);
+  lastTime = ts;
+  const friction = 0.988;
+  ball.vx = (ball.vx + slopeX * 9.8 * dt) * friction;
+  ball.vy = (ball.vy + slopeY * 9.8 * dt) * friction;
+  ball.x += ball.vx * 60 * dt;
+  ball.y += ball.vy * 60 * dt;
+  if(cup){
+    const dx = ball.x - cup.x, dy = ball.y - cup.y;
+    if(Math.sqrt(dx*dx+dy*dy) < 10){
+      rolling = false;
+      phase = 'done';
+      showCupIn();
+      return;
+    }
+  }
+  const gcx = GX+GW/2, gcy = GY+GH/2;
+  const ex = (ball.x-gcx)/(GW/2), ey = (ball.y-gcy)/(GH/2);
+  if(ex*ex+ey*ey > 1.05){
+    rolling = false;
+    phase = 'done';
+    setStatus('out', 'グリーンを外れました。リセットして再挑戦！');
+    return;
+  }
+  const speed = Math.sqrt(ball.vx*ball.vx + ball.vy*ball.vy);
+  if(speed < 0.02){
+    rolling = false;
+    phase = 'done';
+    setStatus('out', '届きませんでした。もっと強く打って！');
+    return;
+  }
+  requestAnimationFrame(rollStep);
+}
+
+function startRoll(vx, vy){
+  if(!ball || rolling) return;
+  ball.vx = vx;
+  ball.vy = vy;
+  rolling = true;
+  phase = 'rolling';
+  setStatus('roll', '転がり中...');
+  lastTime = performance.now();
+  requestAnimationFrame(rollStep);
+}
+
+function manualPutt(){
+  if(!ball || rolling) return;
+  if(phase !== 'ready'){ setStatus('ready','先にグリーンをタップしてボールを置いてください'); return; }
+  const dx = cup.x - ball.x, dy = cup.y - ball.y;
+  const dist = Math.sqrt(dx*dx+dy*dy);
+  const power = Math.min(dist/60, 3.5) * 0.18;
+  startRoll(dx/dist*power, dy/dist*power);
+}
+
+function startMotion(){
+  motionActive = true;
+  window.addEventListener('devicemotion', onMotion);
+}
+
+function onMotion(e){
+  const a = e.accelerationIncludingGravity || e.acceleration;
+  if(!a) return;
+  const ax = a.x||0, ay = a.y||0, az = a.z||0;
+  const dax = ax-lastAX, day = ay-lastAY, daz = az-lastAZ;
+  lastAX=ax; lastAY=ay; lastAZ=az;
+  const mag = Math.sqrt(dax*dax+day*day+daz*daz);
+  swingBuffer.push({ mag, ax, ay, az, t: Date.now() });
+  if(swingBuffer.length > 30) swingBuffer.shift();
+  accel = Math.min(mag * 4, 100);
+  document.getElementById('accelFill').style.width = accel + '%';
+  document.getElementById('accelVal').textContent = mag.toFixed(1);
+  if(mag > 2.5 && phase === 'ready' && ball && !rolling){
+    const power = Math.min(mag * 0.06, 0.5);
+    const nx = -ax / Math.sqrt(ax*ax+ay*ay+0.001);
+    const ny = -ay / Math.sqrt(ax*ax+ay*ay+0.001);
+    startRoll(nx * power, ny * power);
+  }
+}
+
+function requestMotion(){
+  if(typeof DeviceMotionEvent.requestPermission === 'function'){
+    DeviceMotionEvent.requestPermission().then(state => {
+      if(state === 'granted'){
+        document.getElementById('motionBtn').style.display = 'none';
+        startMotion();
+      }
+    }).catch(console.error);
+  } else {
+    document.getElementById('motionBtn').style.display = 'none';
+    startMotion();
+  }
+}
+
+function initMotion(){
+  if(typeof DeviceMotionEvent !== 'undefined'){
+    if(typeof DeviceMotionEvent.requestPermission === 'function'){
+      document.getElementById('motionBtn').style.display = 'block';
+    } else {
+      startMotion();
+    }
+  }
+}
+
+function showCupIn(){
+  const el = document.getElementById('cupIn');
+  el.classList.add('show');
+  el.onclick = () => { el.classList.remove('show'); resetBall(); };
+}
+
+function resetBall(){
+  ball = null;
+  rolling = false;
+  phase = 'place';
+  setStatus('ready', '①傾斜を選ぶ　②グリーンをタップしてボール配置　③スイング！');
+}
+
+function setStatus(type, text){
+  const badge = document.getElementById('statusBadge');
+  document.getElementById('statusText').textContent = text;
+  const map = {
+    ready: ['READY',  'badge-ready'],
+    swing: ['SWING',  'badge-swing'],
+    roll:  ['ROLLING','badge-roll'],
+    done:  ['DONE',   'badge-ready'],
+    out:   ['OUT',    'badge-out'],
+  };
+  const [label, cls] = map[type] || ['READY','badge-ready'];
+  badge.textContent = label;
+  badge.className = 'status-badge ' + cls;
+}
+
+window.addEventListener('load', () => {
+  resize();
+  updateHoleInfo();
+  slopeX = SLOPES[slopeIdx].sx;
+  slopeY = SLOPES[slopeIdx].sy;
+  initMotion();
+  requestAnimationFrame(draw);
+});
+</script>
+</body>
+</html>
