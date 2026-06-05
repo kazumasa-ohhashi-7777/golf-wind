@@ -261,7 +261,7 @@ function onUp(e){
   if(dist < 5){ dragStart=null; dragNow=null; return; }
 
   const clampedDist = Math.min(dist, MAX_DRAG);
-  const power = (clampedDist / MAX_DRAG) * 2.2;
+  const power = (clampedDist / MAX_DRAG) * 4.0;
   const nx = dx/dist, ny = dy/dist;
 
   dragStart=null; dragNow=null;
@@ -290,8 +290,8 @@ function rollStep(ts){
   const friction=0.978;
   ball.vx=(ball.vx+slopeX*9.8*dt)*friction;
   ball.vy=(ball.vy+slopeY*9.8*dt)*friction;
-  ball.x+=ball.vx*58*dt;
-  ball.y+=ball.vy*58*dt;
+  ball.x+=ball.vx*72*dt;
+  ball.y+=ball.vy*72*dt;
   trail.push({x:ball.x,y:ball.y});
   if(trail.length>300) trail.shift();
   if(cup){
