@@ -509,7 +509,7 @@ function manualPutt(){
   if(phase !== 'ready'){ setStatus('ready','先にグリーンをタップしてボールを置いてください'); return; }
   const dx = cup.x - ball.x, dy = cup.y - ball.y;
   const dist = Math.sqrt(dx*dx+dy*dy);
-  const power = Math.min(dist/60, 3.5) * 1.2;
+  const power = 2.5;
   startRoll(dx/dist*power, dy/dist*power);
 }
 
@@ -531,10 +531,11 @@ function onMotion(e){
   document.getElementById('accelFill').style.width = accel + '%';
   document.getElementById('accelVal').textContent = mag.toFixed(1);
   if(mag > 0.8 && phase === 'ready' && ball && !rolling){
-    const power = Math.min(mag * 0.15, 0.5);
-    const nx = -ax / Math.sqrt(ax*ax+ay*ay+0.001);
-    const ny = -ay / Math.sqrt(ax*ax+ay*ay+0.001);
-    startRoll(nx * power, ny * power);
+    const power = Math.min(mag * 0.15, 0.8);
+    // 右→左スイング：X軸変化をカップ方向に変換
+    const dir = cup.x - ball.x;
+    const nx = dir > 0 ? 1 : -1;
+    startRoll(nx * power, -Math.abs(power) * 0.5);
   }
 }
 
