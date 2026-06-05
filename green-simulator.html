@@ -7,7 +7,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Teko:wght@300;400;600&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
 :root {
-  --ink:    #080f09;
+  --ink:    #080f09;ƒ
   --green:  #2a6e3f;
   --green2: #1e5230;
   --gold:   #c8a040;
@@ -509,7 +509,7 @@ function manualPutt(){
   if(phase !== 'ready'){ setStatus('ready','先にグリーンをタップしてボールを置いてください'); return; }
   const dx = cup.x - ball.x, dy = cup.y - ball.y;
   const dist = Math.sqrt(dx*dx+dy*dy);
-  const power = Math.min(dist/60, 3.5) * 0.18;
+  const power = Math.min(dist/60, 3.5) * 0.55;
   startRoll(dx/dist*power, dy/dist*power);
 }
 
