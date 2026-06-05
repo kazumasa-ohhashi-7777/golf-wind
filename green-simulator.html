@@ -10,7 +10,7 @@
   --ink:    #080f09;ƒ
   --green:  #2a6e3f;
   --green2: #1e5230;
-  --gold:   #c8a040;
+  --gold:   #c8a040;ƒ
   --sky:    #6ab8d4;
   --danger: #d84040;
   --safe:   #48b888;
@@ -530,8 +530,8 @@ function onMotion(e){
   accel = Math.min(mag * 4, 100);
   document.getElementById('accelFill').style.width = accel + '%';
   document.getElementById('accelVal').textContent = mag.toFixed(1);
-  if(mag > 2.5 && phase === 'ready' && ball && !rolling){
-    const power = Math.min(mag * 0.06, 0.5);
+  if(mag > 0.8 && phase === 'ready' && ball && !rolling){
+    const power = Math.min(mag * 0.15, 0.5);
     const nx = -ax / Math.sqrt(ax*ax+ay*ay+0.001);
     const ny = -ay / Math.sqrt(ax*ax+ay*ay+0.001);
     startRoll(nx * power, ny * power);
